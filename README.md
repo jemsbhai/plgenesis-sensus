@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🫀 SENSUS
 
@@ -46,23 +46,15 @@ WiFi Router (TP-Link AX1500)
         │ MQTT
         ▼
 ┌─────────────────────────────────────┐
-│     Raspberry Pi 5 Backend         │
+│     Signal Processing Pipeline     │
 │                                     │
-│  Signal Processing Pipeline:        │
 │  1. Conjugate Multiplication        │
-│     (phase cleaning)                │
 │  2. Hampel Filter                   │
-│     (outlier removal)               │
 │  3. Top-K Subcarrier Selection      │
-│     (motion-sensitive channels)     │
 │  4. PCA Extraction                  │
-│     (dominant motion signature)     │
 │  5. Fresnel Breathing Model         │
-│     (physics-based rate extraction) │
 │  6. Cardiac FFT                     │
-│     (heart rate from micro-motion)  │
-│  7. HRV Analysis                    │
-│     (SDNN, RMSSD, pNN50)           │
+│  7. HRV Analysis (SDNN/RMSSD)      │
 │  8. Motion & Presence Detection     │
 │  9. Activity Classification         │
 │ 10. Multi-Node SNR-Weighted Fusion  │
@@ -70,10 +62,7 @@ WiFi Router (TP-Link AX1500)
         │
         ▼
 ┌─────────────────────────────────────┐
-│     Real-Time Dashboard            │
-│  + ML Health State Classifier       │
-│  + Alert System                     │
-│  + Environmental Monitoring         │
+│  Real-Time Dashboard + ML + Alerts │
 └─────────────────────────────────────┘
 ```
 
@@ -83,9 +72,9 @@ By mounting ESP32-C6 nodes directly on or near a chair/bed, the seated/lying per
 
 ## Features
 
-### Virtual Scenario Engine (30 Clinical Scenarios)
+### 🎭 Virtual Scenario Engine (30 Clinical Scenarios)
 
-The demo includes a comprehensive scenario simulator with **30 physiologically accurate clinical scenarios** for demonstration:
+The demo includes a comprehensive scenario simulator with **30 physiologically accurate clinical scenarios**:
 
 | Category | Scenarios |
 |----------|-----------|
@@ -98,61 +87,79 @@ The demo includes a comprehensive scenario simulator with **30 physiologically a
 | **Multi-Person** | Room Occupancy Change, Two People Resting |
 | **Environmental** | Poor Air Quality Response, Heat Stress |
 
-Each scenario generates **physiologically accurate synthetic CSI data** with embedded breathing, cardiac, and motion signals. The existing `CSIProcessor` pipeline extracts vital signs from this data exactly as it would from real hardware — proving the full detection-to-alert chain works.
+Each scenario generates **physiologically accurate synthetic CSI data** with embedded breathing, cardiac, and motion signals that flow through the full detection-to-alert pipeline.
 
-### ML Health State Classifier
+### 🧠 ML Health State Classifier
 
 A **RandomForest ensemble classifier** trained on data from all 30 scenarios provides real-time health state prediction:
 
 - **10 health state classes**: Normal, Sleep, Relaxation, Stress, Medication, Environmental, Cardiac Alert, Respiratory Alert, Emergency, Cardiac Emergency
+- **98.8% accuracy** with F1 score of 0.9883
 - **Risk scoring**: Low → Moderate → High → Critical
-- **Live confidence + probability bars** in the dashboard
-- **Anomaly detection**: Binary normal vs. abnormal classification
+- **Live inference** updating every frame in the dashboard
 
-### Animated Room Visualization
+### ⚡ Impulse AI Integration
 
-The dashboard includes a real-time SVG visualization showing:
+Deep integration with the **Impulse AI** platform for autonomous health state classification:
+
+- **Live API inference** via `/api/chat` endpoint with button-triggered queries
+- **2 XGBoost models trained on platform**: 30-class classifier (6,000 trees) + binary anomaly detector (400 trees)
+- **341,888 training samples** generated across 6 specialized datasets
+- **Dashboard panel** showing real-time Impulse AI predictions alongside local ML
+
+### 🎨 Animated Room Visualization
+
+Real-time SVG visualization showing:
+
 - WiFi nodes with pulsing signal waves
-- Animated signal paths between nodes
-- Person with breathing and heartbeat animations
+- Animated signal paths between nodes and patient
+- Breathing and heartbeat animations at physiological rates
 - Motion-specific animations (seizure, fall, tremor, walking)
-- Fresnel zone ellipses
+- Fresnel zone ellipses showing sensing physics
 
 ## Hackathon Integrations
 
 ### 🧬 Hypercerts — Impact Claims ($2.5K bounty)
+
 Generates structured impact claims from health monitoring sessions with CID-rooted evidence. Each session produces a verifiable hypercert documenting who was monitored, what was detected, and the sensor configuration used.
 
 ### 🔐 Data Sovereignty — Infrastructure & Digital Rights ($6K bounty)
+
 Personal health data vault with:
+
 - AES-256-GCM encryption at rest
-- Granular per-field consent (e.g., grant a clinician access to heart rate only)
+- Granular per-field consent (grant a clinician access to heart rate only)
 - FHIR-compatible portable data export
 - Immutable audit log of all data access
 - Time-bounded, revocable consent grants
 
 ### 📦 Filecoin Storage ($2.5K bounty)
+
 Decentralized health data storage with:
+
 - Content-addressed (CID) health record packages
 - Storage deal structures for Filecoin calibration testnet
 - CAR file manifests for batch upload
 - Verifiable data integrity via SHA-256 hashing
 
 ### 🗄️ Storacha ($500 bounty)
+
 Persistent health data on Storacha network with:
+
 - UCAN delegation chains (Patient → Doctor → Specialist)
 - Re-delegation support for multi-provider workflows
 - Health knowledge base for AI agent RAG
 - Content-addressed retrieval with integrity verification
 
 ### 🤖 Impulse AI — Autonomous ML ($500 bounty)
-Deep integration with the Impulse AI platform for autonomous health state classification:
+
+Deep integration with the Impulse AI platform:
+
 - **SDK Integration**: Connected via `impulse-api-sdk-python` with live API key authentication
-- **Training Pipeline**: 18,180-sample dataset generated from 30 clinical scenarios across 15 physiological features
-- **3 ML Tasks**: Multi-class health state classification (30→10 classes, 98.8% accuracy), binary anomaly detection, and time-series vital sign forecasting
-- **Real-Time Inference**: RandomForest ensemble classifier provides live health state prediction with confidence scoring and risk levels in the dashboard
-- **Impulse AI-Ready Export**: CSV datasets with compatible metadata, feature descriptions, and recommended training parameters for direct upload to Impulse platform
-- **Dashboard Panel**: Live Impulse AI status panel showing SDK connection, dataset stats, model metrics, and per-frame inference results
+- **Training Pipeline**: 341K+ samples generated from 30 clinical scenarios across 15-18 features
+- **2 Trained Models**: 30-class XGBoost classifier + binary anomaly detector, both trained on Impulse AI platform
+- **Live API Inference**: Button-triggered classification via `/api/chat` SSE endpoint
+- **6 Specialized Datasets**: Full 30-class, cardiac-focused, respiratory-focused, emergency detection, medication tracking, anomaly detection
 
 ## Tech Stack
 
@@ -160,9 +167,9 @@ Deep integration with the Impulse AI platform for autonomous health state classi
 |-----------|-----------|
 | **CSI Sensing** | ESP32-C6 (XIAO) × 3, WiFi CSI at 2.4 GHz |
 | **Signal Processing** | NumPy, SciPy (FFT, bandpass, PCA, Hampel filter) |
-| **ML Classification** | scikit-learn + Impulse AI SDK (RandomForest, 98.8% acc, 30 scenarios) |
+| **ML Classification** | scikit-learn + Impulse AI (RandomForest + XGBoost, 98.8% acc) |
 | **Backend** | Raspberry Pi 5, MQTT (Mosquitto), Python |
-| **Dashboard** | Streamlit, Plotly, HTML5 Canvas, SVG animations |
+| **Dashboard** | Streamlit, HTML5 Canvas, SVG animations |
 | **Networking** | TP-Link AX1500 (dual-band), MQTT over LAN |
 | **Environment** | DHT11, CCS811, MAX30102, GSR (via Arduino Giga R1) |
 | **Storage** | Filecoin, Storacha, MongoDB Atlas |
@@ -171,6 +178,7 @@ Deep integration with the Impulse AI platform for autonomous health state classi
 ## Quick Start
 
 ### Prerequisites
+
 - Python 3.10+
 - pip
 
@@ -180,7 +188,6 @@ Deep integration with the Impulse AI platform for autonomous health state classi
 git clone https://github.com/jemsbhai/plgenesis-sensus.git
 cd plgenesis-sensus
 pip install -r demo/requirements.txt
-pip install scikit-learn
 ```
 
 ### Run the Demo
@@ -201,6 +208,13 @@ python integrations/data_sovereignty.py
 python integrations/filecoin_store.py
 python integrations/storacha_store.py
 python integrations/impulse_ml.py
+python integrations/impulse_inference.py
+```
+
+### Generate Datasets for Impulse AI
+
+```bash
+python integrations/generate_datasets.py
 ```
 
 ## Project Structure
@@ -217,24 +231,34 @@ plgenesis-sensus/
 │   ├── data_sovereignty.py   # Encrypted vault + consent + FHIR export
 │   ├── filecoin_store.py     # Decentralized storage on Filecoin
 │   ├── storacha_store.py     # Storacha storage + UCAN delegations
-│   └── impulse_ml.py         # ML dataset export for Impulse AI
-├── pi/
-│   └── services/
-│       ├── csi_processor.py  # RuView-inspired CSI signal processing
-│       ├── dashboard.py      # Original Flask dashboard (hardware mode)
-│       ├── main.py           # MQTT event handling + sensor fusion
-│       └── ...
+│   ├── impulse_ml.py         # ML dataset export for Impulse AI
+│   ├── impulse_inference.py  # Live Impulse AI API inference
+│   └── generate_datasets.py  # Large dataset generator (341K samples)
+├── pi/services/
+│   ├── csi_processor.py      # RuView-inspired CSI signal processing
+│   ├── dashboard.py          # Original Flask dashboard (hardware mode)
+│   └── main.py               # MQTT event handling + sensor fusion
 ├── esp32/                    # ESP32-C6 firmware (CSI collection)
 ├── arduino/                  # Arduino Giga R1 sensor firmware
-├── output/                   # Generated artifacts from integrations
-│   ├── hypercerts/           # Impact claim JSONs
-│   ├── data_sovereignty/     # Encrypted vault exports
-│   ├── filecoin/             # Storage packages + manifests
-│   ├── storacha/             # UCAN delegations + knowledge base
-│   ├── impulse_ai/           # Training datasets (CSV)
-│   └── model/                # Trained classifier (pickle)
-└── README.md
+└── output/
+    ├── hypercerts/           # Impact claim JSONs
+    ├── data_sovereignty/     # Encrypted vault exports
+    ├── filecoin/             # Storage packages + manifests
+    ├── storacha/             # UCAN delegations + knowledge base
+    ├── impulse_ai/           # Training datasets (CSV) + results
+    └── model/                # Trained classifier (pickle)
 ```
+
+## Clinical Relevance
+
+| Use Case | Impact |
+|----------|--------|
+| **Sleep Apnea Screening** | Affects ~1B people globally. Detects breathing pauses without a sleep lab. |
+| **Opioid Overdose Prevention** | #1 cause of preventable hospital death. Contactless respiratory monitoring. |
+| **Elderly Fall Detection** | Leading cause of injury death in adults 65+. Immediate detection + alerting. |
+| **Post-Surgical Monitoring** | Continuous vitals without sensor fatigue or skin irritation. |
+| **Medication Compliance** | Track physiological response to beta blockers, sedatives, stimulants. |
+| **Mental Health** | Detect panic attacks, PTSD flashbacks, stress episodes contactlessly. |
 
 ## Research References
 
@@ -243,17 +267,6 @@ plgenesis-sensus/
 - **ESPectre** — Spectral analysis of CSI for activity recognition
 - **MultiSense** — Multi-node CSI sensing framework
 - **SpaceBeat** — Contactless vital sign monitoring via WiFi
-
-## Clinical Relevance
-
-| Use Case | Impact |
-|----------|--------|
-| **Sleep Apnea Screening** | Affects ~1B people globally. Sensus detects breathing pauses without a sleep lab. |
-| **Opioid Overdose Prevention** | #1 cause of preventable hospital death. Contactless respiratory depression monitoring. |
-| **Elderly Fall Detection** | Leading cause of injury death in adults 65+. Immediate detection + alerting. |
-| **Post-Surgical Monitoring** | Continuous vitals without sensor fatigue or skin irritation. |
-| **Medication Compliance** | Track physiological response to beta blockers, sedatives, stimulants. |
-| **Mental Health** | Detect panic attacks, PTSD flashbacks, stress episodes contactlessly. |
 
 ## Team
 
@@ -270,4 +283,3 @@ MIT License — see [LICENSE](LICENSE) for details.
 **Sensus: Because the best sensor is the one you don't have to wear.**
 
 </div>
-]]>
