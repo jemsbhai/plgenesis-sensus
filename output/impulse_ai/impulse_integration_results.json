@@ -1,0 +1,16 @@
+{
+  "status": "complete",
+  "user": {
+    "connected": true,
+    "info": "Connected (key valid)"
+  },
+  "datasets": [],
+  "upload": {
+    "success": false,
+    "error": "Impulse API Error (Status 404): Route POST:/v1/datasets not found",
+    "dataset_name": "sensus-health-classification",
+    "samples": 18180
+  },
+  "models": [],
+  "timestamp": "2026-04-01T03:48:56.998155+00:00"
+}

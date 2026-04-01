@@ -1,0 +1,26 @@
+[
+  {
+    "delegation_id": "ef967926acfc42f7",
+    "issuer": "patient_001",
+    "audience": "dr_jones",
+    "resource_cid": "bafkreig0e49267de8fcbd55e586467ebfc9e5188090749c0536f0f028a4",
+    "capabilities": [
+      "read"
+    ],
+    "expiration": "2026-04-07T22:49:42.841332+00:00",
+    "created_at": "2026-03-31T22:49:42.841332+00:00",
+    "chain_depth": 0
+  },
+  {
+    "delegation_id": "d897d2ba7bb36189",
+    "issuer": "dr_jones",
+    "audience": "specialist_lee",
+    "resource_cid": "bafkreig0e49267de8fcbd55e586467ebfc9e5188090749c0536f0f028a4",
+    "capabilities": [
+      "read"
+    ],
+    "expiration": "2026-04-07T22:49:42.841332+00:00",
+    "created_at": "2026-03-31T22:49:42.844401+00:00",
+    "chain_depth": 1
+  }
+]

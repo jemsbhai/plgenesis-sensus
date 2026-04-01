@@ -9,33 +9,11 @@
  *   - MAX30102:  Heart Rate + SpO2 ground truth   (I2C: SDA/SCL, addr 0x57)
  *   - GSR:       Galvanic Skin Response            (Analog A0)
  *   - RFID RC522: Mifare card authentication       (SPI: MOSI=D11, MISO=D12, SCK=D13, SS=D10, RST=D9)
- *   - M5Stack Finger2: Fingerprint scanner         (UART Serial1: TX=D1, RX=D0) 
+ *   - M5Stack Finger2: Fingerprint scanner         (UART Serial1: TX=D1, RX=D0)
  *   - NeoPixel:  8-LED status strip                (Digital pin D5)
- *
- * Publishes to MQTT on Pi (192.168.0.59:1883):
- *   sensus/giga/env       - temp, humidity, co2, tvoc
- *   sensus/giga/hr        - heart rate, spo2 from MAX30102
- *   sensus/giga/gsr       - galvanic skin response
- *   sensus/giga/auth      - RFID UID or fingerprint ID
- *   sensus/giga/status    - heartbeat
- *
- * Subscribes:
- *   sensus/giga/leds      - JSON {r,g,b} or alert level to set NeoPixels
- *   sensus/giga/alert     - "normal", "warning", "critical"
  *
  * Board: Arduino Giga R1 WiFi
  * Board Package: Arduino Mbed OS Giga Boards
- *
- * Libraries (install via Library Manager):
- *   - WiFi (built-in with Giga board package)
- *   - PubSubClient
- *   - ArduinoJson
- *   - DHT sensor library (by Adafruit)
- *   - Adafruit CCS811
- *   - SparkFun MAX3010x Pulse and Proximity Sensor
- *   - Adafruit NeoPixel
- *   - MFRC522 (by GithubCommunity)
- *   - Adafruit Fingerprint Sensor Library
  */
 
 #include <WiFi.h>
@@ -70,13 +48,13 @@
 #define RFID_RST_PIN  9
 
 // ─── TIMING ──────────────────────────────────────────────────────────────────
-#define ENV_INTERVAL_MS      2000   // Temp/humidity/CO2 every 2s
-#define HR_INTERVAL_MS       100    // MAX30102 at ~10 Hz
-#define GSR_INTERVAL_MS      500    // GSR every 500ms
-#define RFID_INTERVAL_MS     300    // RFID scan every 300ms
-#define FP_INTERVAL_MS       1000   // Fingerprint scan every 1s
-#define STATUS_INTERVAL_MS   10000  // Heartbeat every 10s
-#define HR_PUBLISH_MS        1000   // Publish averaged HR every 1s
+#define ENV_INTERVAL_MS      2000
+#define HR_INTERVAL_MS       100
+#define GSR_INTERVAL_MS      500
+#define RFID_INTERVAL_MS     300
+#define FP_INTERVAL_MS       1000
+#define STATUS_INTERVAL_MS   10000
+#define HR_PUBLISH_MS        1000
 
 // ─── OBJECTS ─────────────────────────────────────────────────────────────────
 WiFiClient wifiClient;
@@ -99,9 +77,6 @@ bool rfidReady = false;
 bool fpReady = false;
 
 // MAX30102 heart rate averaging
-#define HR_AVG_SIZE 8
-long irValues[HR_AVG_SIZE];
-int irIdx = 0;
 float beatsPerMinute = 0;
 int beatAvg = 0;
 const byte RATE_SIZE = 4;
@@ -116,7 +91,6 @@ String currentAlert = "normal";
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
     String msg;
     for (unsigned int i = 0; i < length; i++) msg += (char)payload[i];
-
     String t = String(topic);
 
     if (t == "sensus/giga/alert") {
@@ -124,7 +98,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         updateLEDs();
     }
     else if (t == "sensus/giga/leds") {
-        // Custom color: {"r":255,"g":0,"b":0}
         StaticJsonDocument<64> doc;
         if (deserializeJson(doc, msg) == DeserializationError::Ok) {
             uint8_t r = doc["r"] | 0;
@@ -140,13 +113,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 void updateLEDs() {
     uint32_t color;
     if (currentAlert == "critical") {
-        color = strip.Color(255, 0, 0);       // Red
+        color = strip.Color(255, 0, 0);
     } else if (currentAlert == "warning") {
-        color = strip.Color(255, 140, 0);     // Orange
+        color = strip.Color(255, 140, 0);
     } else if (currentAlert == "auth_ok") {
-        color = strip.Color(0, 255, 0);       // Green flash for auth
+        color = strip.Color(0, 255, 0);
     } else {
-        color = strip.Color(0, 40, 80);       // Calm blue = normal
+        color = strip.Color(0, 40, 80);
     }
     for (int i = 0; i < NEOPIXEL_COUNT; i++) strip.setPixelColor(i, color);
     strip.show();
@@ -169,7 +142,9 @@ void ledStartupAnimation() {
 void connectWiFi() {
     WiFi.disconnect();
     delay(500);
-    Serial.printf("[WiFi] Connecting to '%s'...\n", WIFI_SSID);
+    Serial.print("[WiFi] Connecting to '");
+    Serial.print(WIFI_SSID);
+    Serial.println("'...");
     WiFi.begin(WIFI_SSID, WIFI_PASS);
 
     int timeout = 40;
@@ -180,15 +155,14 @@ void connectWiFi() {
     }
 
     if (WiFi.status() == WL_CONNECTED) {
-        Serial.printf("\n[WiFi] Connected! IP: %s\n", WiFi.localIP().toString().c_str());
-        // Green flash
+        Serial.print("\n[WiFi] Connected! IP: ");
+        Serial.println(WiFi.localIP());
         for (int i = 0; i < NEOPIXEL_COUNT; i++) strip.setPixelColor(i, strip.Color(0, 255, 0));
         strip.show();
         delay(300);
         updateLEDs();
     } else {
         Serial.println("\n[WiFi] FAILED");
-        // Red flash
         for (int i = 0; i < NEOPIXEL_COUNT; i++) strip.setPixelColor(i, strip.Color(255, 0, 0));
         strip.show();
     }
@@ -199,14 +173,15 @@ void mqttReconnect() {
     if (WiFi.status() != WL_CONNECTED) return;
 
     String clientId = String("sensus-giga-") + String(random(1000));
-    Serial.printf("[MQTT] Connecting to %s:%d...\n", MQTT_BROKER, MQTT_PORT);
+    Serial.print("[MQTT] Connecting to ");
+    Serial.print(MQTT_BROKER);
+    Serial.println("...");
 
     if (mqtt.connect(clientId.c_str())) {
         Serial.println("[MQTT] Connected!");
         mqtt.subscribe("sensus/giga/alert");
         mqtt.subscribe("sensus/giga/leds");
 
-        // Publish connected event
         StaticJsonDocument<128> doc;
         doc["node"] = NODE_ID;
         doc["event"] = "connected";
@@ -215,7 +190,8 @@ void mqttReconnect() {
         serializeJson(doc, buf);
         mqtt.publish("sensus/giga/status", buf);
     } else {
-        Serial.printf("[MQTT] Failed (rc=%d)\n", mqtt.state());
+        Serial.print("[MQTT] Failed, rc=");
+        Serial.println(mqtt.state());
     }
 }
 
@@ -227,59 +203,45 @@ void publishJson(const char* topic, JsonDocument& doc) {
 
 // ─── SENSOR INIT ─────────────────────────────────────────────────────────────
 void initSensors() {
-    // DHT11
     dht.begin();
     Serial.println("[DHT11] Initialized on pin D2");
 
-    // CCS811 (I2C addr 0x5A or 0x5B)
     if (ccs.begin()) {
         ccsReady = true;
-        // Wait for sensor warmup
         while (!ccs.available()) delay(100);
         Serial.println("[CCS811] Initialized (I2C)");
     } else {
-        Serial.println("[CCS811] NOT FOUND — skipping");
+        Serial.println("[CCS811] NOT FOUND - skipping");
     }
 
-    // MAX30102 (I2C addr 0x57)
     if (particleSensor.begin(Wire, I2C_SPEED_FAST)) {
         maxReady = true;
         particleSensor.setup();
-        particleSensor.setPulseAmplitudeRed(0x0A);   // Low for proximity
-        particleSensor.setPulseAmplitudeGreen(0);     // Off
+        particleSensor.setPulseAmplitudeRed(0x0A);
+        particleSensor.setPulseAmplitudeGreen(0);
         Serial.println("[MAX30102] Initialized (I2C)");
     } else {
-        Serial.println("[MAX30102] NOT FOUND — skipping");
+        Serial.println("[MAX30102] NOT FOUND - skipping");
     }
 
-    // RFID RC522 (SPI)
     SPI.begin();
     rfid.PCD_Init();
     delay(100);
-    if (rfid.PCD_PerformSelfTest()) {
-        rfidReady = true;
-        rfid.PCD_Init();  // Re-init after self test
-        Serial.println("[RFID] RC522 Initialized (SPI)");
-    } else {
-        // Self test sometimes fails but reader still works
-        rfidReady = true;
-        rfid.PCD_Init();
-        Serial.println("[RFID] RC522 Init (self-test skipped)");
-    }
+    rfidReady = true;
+    rfid.PCD_Init();
+    Serial.println("[RFID] RC522 Initialized (SPI)");
 
-    // Fingerprint (UART on Serial1)
     Serial1.begin(57600);
     finger.begin(57600);
     if (finger.verifyPassword()) {
         fpReady = true;
-        Serial.print("[Fingerprint] Found sensor with ");
         finger.getTemplateCount();
-        Serial.printf("%d templates stored\n", finger.templateCount);
+        Serial.print("[Fingerprint] Found, templates: ");
+        Serial.println(finger.templateCount);
     } else {
-        Serial.println("[Fingerprint] NOT FOUND — skipping");
+        Serial.println("[Fingerprint] NOT FOUND - skipping");
     }
 
-    // NeoPixel
     strip.begin();
     strip.setBrightness(60);
     strip.show();
@@ -292,13 +254,11 @@ void readAndPublishEnv() {
     StaticJsonDocument<256> doc;
     doc["ts"] = millis();
 
-    // DHT11
     float temp = dht.readTemperature();
     float hum = dht.readHumidity();
     if (!isnan(temp)) doc["temp"] = serialized(String(temp, 1));
     if (!isnan(hum))  doc["humidity"] = serialized(String(hum, 1));
 
-    // CCS811
     if (ccsReady && ccs.available() && !ccs.readData()) {
         doc["co2"] = ccs.geteCO2();
         doc["tvoc"] = ccs.getTVOC();
@@ -312,17 +272,14 @@ void readMAX30102() {
 
     long irValue = particleSensor.getIR();
 
-    if (irValue > 50000) {  // Finger is on the sensor
+    if (irValue > 50000) {
         if (checkForBeat(irValue)) {
             long delta = millis() - lastBeat;
             lastBeat = millis();
-
             beatsPerMinute = 60.0 / (delta / 1000.0);
 
             if (beatsPerMinute > 30 && beatsPerMinute < 220) {
                 rates[rateSpot++ % RATE_SIZE] = (byte)beatsPerMinute;
-
-                // Compute average
                 beatAvg = 0;
                 byte count = min((byte)rateSpot, RATE_SIZE);
                 for (byte i = 0; i < count; i++) beatAvg += rates[i];
@@ -330,7 +287,6 @@ void readMAX30102() {
             }
         }
     } else {
-        // No finger detected
         beatsPerMinute = 0;
         beatAvg = 0;
     }
@@ -341,7 +297,6 @@ void publishHR() {
 
     StaticJsonDocument<128> doc;
     doc["ts"] = millis();
-
     if (beatAvg > 0) {
         doc["hr"] = beatAvg;
         doc["bpm_raw"] = serialized(String(beatsPerMinute, 1));
@@ -350,24 +305,20 @@ void publishHR() {
         doc["hr"] = 0;
         doc["finger"] = false;
     }
-
     publishJson("sensus/giga/hr", doc);
 }
 
 void readAndPublishGSR() {
     int raw = analogRead(GSR_PIN);
-    // Convert to conductance (microsiemens)
-    // Giga ADC is 16-bit (0-65535), 3.3V reference
     float voltage = raw * (3.3 / 65535.0);
-    float resistance = (3.3 - voltage) / (voltage + 0.0001) * 10000.0;  // 10K reference
-    float conductance = 1000000.0 / (resistance + 1.0);  // microsiemens
+    float resistance = (3.3 - voltage) / (voltage + 0.0001) * 10000.0;
+    float conductance = 1000000.0 / (resistance + 1.0);
 
     StaticJsonDocument<128> doc;
     doc["ts"] = millis();
     doc["raw"] = raw;
     doc["conductance"] = serialized(String(conductance, 2));
     doc["voltage"] = serialized(String(voltage, 3));
-
     publishJson("sensus/giga/gsr", doc);
 }
 
@@ -376,7 +327,6 @@ void checkRFID() {
     if (!rfid.PICC_IsNewCardPresent()) return;
     if (!rfid.PICC_ReadCardSerial()) return;
 
-    // Build UID string
     String uid = "";
     for (byte i = 0; i < rfid.uid.size; i++) {
         if (rfid.uid.uidByte[i] < 0x10) uid += "0";
@@ -385,9 +335,9 @@ void checkRFID() {
     }
     uid.toUpperCase();
 
-    Serial.printf("[RFID] Card detected: %s\n", uid.c_str());
+    Serial.print("[RFID] Card: ");
+    Serial.println(uid);
 
-    // Flash green for auth
     for (int i = 0; i < NEOPIXEL_COUNT; i++) strip.setPixelColor(i, strip.Color(0, 255, 0));
     strip.show();
     delay(200);
@@ -398,7 +348,6 @@ void checkRFID() {
     doc["method"] = "rfid";
     doc["uid"] = uid;
     doc["type"] = rfid.PICC_GetTypeName(rfid.PICC_GetType(rfid.uid.sak));
-
     publishJson("sensus/giga/auth", doc);
 
     rfid.PICC_HaltA();
@@ -409,17 +358,18 @@ void checkFingerprint() {
     if (!fpReady) return;
 
     int result = finger.getImage();
-    if (result != FINGERPRINT_OK) return;  // No finger present
+    if (result != FINGERPRINT_OK) return;
 
     result = finger.image2Tz();
     if (result != FINGERPRINT_OK) return;
 
     result = finger.fingerSearch();
     if (result == FINGERPRINT_OK) {
-        Serial.printf("[Fingerprint] Match! ID: %d  Confidence: %d\n",
-                      finger.fingerID, finger.confidence);
+        Serial.print("[Fingerprint] Match! ID: ");
+        Serial.print(finger.fingerID);
+        Serial.print("  Confidence: ");
+        Serial.println(finger.confidence);
 
-        // Flash green
         for (int i = 0; i < NEOPIXEL_COUNT; i++) strip.setPixelColor(i, strip.Color(0, 255, 0));
         strip.show();
         delay(300);
@@ -430,19 +380,15 @@ void checkFingerprint() {
         doc["method"] = "fingerprint";
         doc["id"] = finger.fingerID;
         doc["confidence"] = finger.confidence;
-
         publishJson("sensus/giga/auth", doc);
     } else if (result == FINGERPRINT_NOTFOUND) {
-        // Unknown finger — still publish for enrollment flow
         StaticJsonDocument<128> doc;
         doc["ts"] = millis();
         doc["method"] = "fingerprint";
         doc["id"] = -1;
         doc["status"] = "unknown";
-
         publishJson("sensus/giga/auth", doc);
 
-        // Flash orange
         for (int i = 0; i < NEOPIXEL_COUNT; i++) strip.setPixelColor(i, strip.Color(255, 140, 0));
         strip.show();
         delay(300);
@@ -468,8 +414,12 @@ void publishStatus() {
 
     publishJson("sensus/giga/status", doc);
 
-    Serial.printf("[Status] Up: %lus | HR: %d bpm | Alert: %s\n",
-                  millis() / 1000, beatAvg, currentAlert.c_str());
+    Serial.print("[Status] Up: ");
+    Serial.print(millis() / 1000);
+    Serial.print("s | HR: ");
+    Serial.print(beatAvg);
+    Serial.print(" bpm | Alert: ");
+    Serial.println(currentAlert);
 }
 
 // ─── SETUP ───────────────────────────────────────────────────────────────────
@@ -486,21 +436,17 @@ void setup() {
     Serial.println("           NeoPixel x8 Status LEDs");
     Serial.println("========================================");
 
-    // NeoPixel first (for visual feedback)
     strip.begin();
     strip.setBrightness(60);
     ledStartupAnimation();
 
-    // WiFi
     connectWiFi();
 
-    // MQTT
     mqtt.setServer(MQTT_BROKER, MQTT_PORT);
     mqtt.setCallback(mqttCallback);
     mqtt.setBufferSize(2048);
     mqtt.setKeepAlive(30);
 
-    // Sensors
     initSensors();
 
     Serial.println("[Sensus] Giga sensor hub ready!");
@@ -508,64 +454,24 @@ void setup() {
 
 // ─── LOOP ────────────────────────────────────────────────────────────────────
 void loop() {
-    // WiFi check
     if (WiFi.status() != WL_CONNECTED) {
         connectWiFi();
-        if (WiFi.status() != WL_CONNECTED) {
-            delay(5000);
-            return;
-        }
+        if (WiFi.status() != WL_CONNECTED) { delay(5000); return; }
     }
 
-    // MQTT check
     if (!mqtt.connected()) {
         mqttReconnect();
-        if (!mqtt.connected()) {
-            delay(3000);
-            return;
-        }
+        if (!mqtt.connected()) { delay(3000); return; }
     }
     mqtt.loop();
 
     unsigned long now = millis();
 
-    // Environmental sensors (2 Hz)
-    if (now - lastEnv >= ENV_INTERVAL_MS) {
-        readAndPublishEnv();
-        lastEnv = now;
-    }
-
-    // MAX30102 heart rate (10 Hz read, 1 Hz publish)
-    if (now - lastHR >= HR_INTERVAL_MS) {
-        readMAX30102();
-        lastHR = now;
-    }
-    if (now - lastHRPublish >= HR_PUBLISH_MS) {
-        publishHR();
-        lastHRPublish = now;
-    }
-
-    // GSR (2 Hz)
-    if (now - lastGSR >= GSR_INTERVAL_MS) {
-        readAndPublishGSR();
-        lastGSR = now;
-    }
-
-    // RFID scan (continuous, ~3 Hz)
-    if (now - lastRFID >= RFID_INTERVAL_MS) {
-        checkRFID();
-        lastRFID = now;
-    }
-
-    // Fingerprint scan (1 Hz)
-    if (now - lastFP >= FP_INTERVAL_MS) {
-        checkFingerprint();
-        lastFP = now;
-    }
-
-    // Status heartbeat
-    if (now - lastStatus >= STATUS_INTERVAL_MS) {
-        publishStatus();
-        lastStatus = now;
-    }
+    if (now - lastEnv >= ENV_INTERVAL_MS) { readAndPublishEnv(); lastEnv = now; }
+    if (now - lastHR >= HR_INTERVAL_MS) { readMAX30102(); lastHR = now; }
+    if (now - lastHRPublish >= HR_PUBLISH_MS) { publishHR(); lastHRPublish = now; }
+    if (now - lastGSR >= GSR_INTERVAL_MS) { readAndPublishGSR(); lastGSR = now; }
+    if (now - lastRFID >= RFID_INTERVAL_MS) { checkRFID(); lastRFID = now; }
+    if (now - lastFP >= FP_INTERVAL_MS) { checkFingerprint(); lastFP = now; }
+    if (now - lastStatus >= STATUS_INTERVAL_MS) { publishStatus(); lastStatus = now; }
 }

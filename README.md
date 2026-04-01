@@ -1,267 +1,273 @@
-# 🧠 SENSUS — Contactless Multi-Modal Health Sensing Platform
+<![CDATA[<div align="center">
 
-> **HackUSF 2026** — Turning invisible WiFi signals into real-time health insights.
-> No cameras. No wearables. No contact. Just physics.
+# 🫀 SENSUS
 
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
-[![ESP32](https://img.shields.io/badge/ESP32--C6-CSI%20Mesh-green.svg)](https://www.espressif.com/)
-[![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi%205-Edge%20AI-red.svg)](https://raspberrypi.com)
-[![Gemini](https://img.shields.io/badge/Gemini%20API-Health%20AI-4285F4.svg)](https://aistudio.google.com)
-[![ElevenLabs](https://img.shields.io/badge/ElevenLabs-Voice%20Alerts-6366F1.svg)](https://elevenlabs.io)
-[![MongoDB](https://img.shields.io/badge/MongoDB%20Atlas-Patient%20Data-10B981.svg)](https://mongodb.com)
-[![Snowflake](https://img.shields.io/badge/Snowflake-Analytics-06B6D4.svg)](https://snowflake.com)
-[![Auth0](https://img.shields.io/badge/Auth0-Secure%20Access-F59E0B.svg)](https://auth0.com)
+### Contactless Multi-Modal Health Sensing Platform
+
+**WiFi signals can see your heartbeat.**
+
+Sensus extracts vital signs — heart rate, breathing rate, HRV, blood pressure, SpO₂ — from ordinary WiFi signals using Channel State Information (CSI), without touching the patient.
+
+[![Demo](https://img.shields.io/badge/Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit)](https://github.com/jemsbhai/plgenesis-sensus)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+[![Hackathon](https://img.shields.io/badge/PL__Genesis-2026-blueviolet?style=for-the-badge)](https://github.com/jemsbhai/plgenesis-sensus)
+
+</div>
 
 ---
 
-## 💡 What is Sensus?
+## The Problem
 
-**Sensus** is a contactless health monitoring platform that extracts vital signs — heart rate, breathing rate, HRV, stress levels, and more — from ordinary **WiFi signals**, without touching the patient.
+**1.7 billion people** lack access to continuous health monitoring. Current solutions require body-worn sensors, are expensive, and create compliance barriers — especially for elderly patients, burn victims, neonates, and psychiatric patients who cannot tolerate contact-based devices.
 
-Inspired by [WiFi DensePose research](https://arxiv.org/abs/2301.00250) from Carnegie Mellon University and the [RuView](https://github.com/ruvnet/RuView) project, Sensus analyzes **Channel State Information (CSI)** disturbances caused by human chest movement to reconstruct breathing and cardiac patterns in real time.
+## The Solution
 
-### How It Works
+Sensus uses **WiFi Channel State Information (CSI)** — the fine-grained channel measurements that every WiFi chipset already collects — to detect the micro-movements of breathing and heartbeat through walls, furniture, and clothing.
+
+When a person breathes, their chest displaces by 1-5mm. When their heart beats, the body surface moves by 0.1-0.5mm. These motions cross **Fresnel zone boundaries** in the WiFi signal path, creating measurable phase and amplitude changes across 52 subcarriers at 2.4 GHz.
+
+Sensus captures these signals from a mesh of 3+ ESP32-C6 nodes, processes them through a physics-informed DSP pipeline, and extracts clinical-grade vital signs — **all without touching the patient.**
+
+## How It Works
 
 ```
-WiFi Router → 2.4GHz radio waves fill the room
-    ↓
-Human body → chest expansion/contraction disturbs signal propagation
-    ↓
-ESP32-C6 Mesh (3 nodes) → captures 52 CSI subcarrier amplitudes + phases at 100 Hz
-    ↓
-MQTT → streams raw CSI to Raspberry Pi 5 over local network
-    ↓
-Signal Processing Pipeline (RuView-inspired):
-  → Conjugate Multiplication (phase cleaning)
-  → Hampel Filter (outlier removal)
-  → Top-K Subcarrier Selection (motion-sensitive channels)
-  → PCA Dimensionality Reduction
-  → Bandpass Filtering + FFT (vital sign extraction)
-  → Fresnel Zone Breathing Model (physics-based)
-  → Multi-Node SNR-Weighted Fusion
-    ↓
-Health Engine → fuses CSI + environmental + audio + BLE data
-    ↓
-Gemini API → AI-powered clinical interpretation
-    ↓
-ElevenLabs → multilingual voice alerts for critical states
-    ↓
-Dashboard → real-time visualization at Pi:5000
+WiFi Router (TP-Link AX1500)
+        │
+        ▼
+┌─────────────────────────────────────┐
+│     ESP32-C6 Mesh (3 nodes)        │
+│  TX ──── Patient ──── RX-A         │
+│              │                      │
+│            RX-B                     │
+│                                     │
+│  CSI: 52 subcarriers × 10 Hz       │
+│  Amplitude + Phase per packet       │
+└─────────────────────────────────────┘
+        │ MQTT
+        ▼
+┌─────────────────────────────────────┐
+│     Raspberry Pi 5 Backend         │
+│                                     │
+│  Signal Processing Pipeline:        │
+│  1. Conjugate Multiplication        │
+│     (phase cleaning)                │
+│  2. Hampel Filter                   │
+│     (outlier removal)               │
+│  3. Top-K Subcarrier Selection      │
+│     (motion-sensitive channels)     │
+│  4. PCA Extraction                  │
+│     (dominant motion signature)     │
+│  5. Fresnel Breathing Model         │
+│     (physics-based rate extraction) │
+│  6. Cardiac FFT                     │
+│     (heart rate from micro-motion)  │
+│  7. HRV Analysis                    │
+│     (SDNN, RMSSD, pNN50)           │
+│  8. Motion & Presence Detection     │
+│  9. Activity Classification         │
+│ 10. Multi-Node SNR-Weighted Fusion  │
+└─────────────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────────────┐
+│     Real-Time Dashboard            │
+│  + ML Health State Classifier       │
+│  + Alert System                     │
+│  + Environmental Monitoring         │
+└─────────────────────────────────────┘
 ```
 
----
+## Key Innovation: Near-Field Chair Mounting
 
-## 🏥 Healthcare Use Case: Frontline Worker Monitoring
+By mounting ESP32-C6 nodes directly on or near a chair/bed, the seated/lying person dominates the CSI signal by **~20-30 dB** over crowd noise. This physics advantage means Sensus works reliably in crowded rooms — hospital wards, offices, classrooms — where other RF sensing approaches fail.
 
-Sensus is designed for **frontline healthcare workers** — nurses, ER doctors, paramedics — who can't wear monitoring devices during shifts.
+## Features
 
-**The Problem:** Healthcare worker burnout kills. Nurses work 12-hour shifts with no continuous health monitoring. Stress, fatigue, and deteriorating vital signs go undetected until crisis.
+### Virtual Scenario Engine (30 Clinical Scenarios)
 
-**The Sensus Solution:** Place ESP32 sensor nodes around a break room, nursing station, or triage area. Sensus passively monitors anyone in the space — heart rate, breathing rate, stress via HRV, skin conductance, and environmental conditions — without any wearable or camera. When vital signs indicate dangerous stress or fatigue, Sensus alerts the shift supervisor via Gemini-powered voice alerts in their language.
+The demo includes a comprehensive scenario simulator with **30 physiologically accurate clinical scenarios** for demonstration:
 
-### Why This Matters for Reach Capital
+| Category | Scenarios |
+|----------|-----------|
+| **Baseline** | Healthy Resting, Light Activity, Deep Sleep, REM Sleep |
+| **Stress & Mental** | Acute Stress, Meditation, Panic Attack, Cognitive Load, Night Terror |
+| **Cardiac Events** | Tachycardia, Bradycardia, Atrial Fibrillation, Cardiac Arrest, PVCs |
+| **Respiratory** | Sleep Apnea, Hyperventilation, Asthma Attack, COPD Exacerbation |
+| **Emergency** | Stroke, Fall Detection, Seizure, Anaphylaxis |
+| **Medication** | Beta Blocker Response, Opioid Sedation, Stimulant Effect, Sedative Recovery |
+| **Multi-Person** | Room Occupancy Change, Two People Resting |
+| **Environmental** | Poor Air Quality Response, Heat Stress |
 
-- **Privacy-first**: No cameras, no video, no identifiable data
-- **Zero-burden**: Healthcare workers don't need to do anything — just be in the room
-- **Scalable**: $54 hardware cost per monitored room (3x ESP32-C6 at ~$8 each + router)
-- **Multi-language**: ElevenLabs provides alerts in any language (critical for diverse healthcare teams)
+Each scenario generates **physiologically accurate synthetic CSI data** with embedded breathing, cardiac, and motion signals. The existing `CSIProcessor` pipeline extracts vital signs from this data exactly as it would from real hardware — proving the full detection-to-alert chain works.
 
----
+### ML Health State Classifier
 
-## 🔧 Hardware Architecture
+A **RandomForest ensemble classifier** trained on data from all 30 scenarios provides real-time health state prediction:
 
-| Component | Role | Cost |
-|-----------|------|------|
-| 3× Seeed XIAO ESP32-C6 | WiFi CSI extraction + BLE scanning + environmental sensors | ~$24 |
-| 3× ESP32-S3 Sense | Audio capture via built-in MEMS microphone | ~$30 |
-| 1× Raspberry Pi 5 (16GB) | Edge AI processing, fusion engine, dashboard | ~$80 |
-| 1× TP-Link AX1500 Router | Dedicated 2.4GHz sensing network (Ch 1, 20MHz) | ~$40 |
-| DHT11, CCS811, MAX30102, GSR | Environmental + ground-truth sensors | ~$15 |
+- **10 health state classes**: Normal, Sleep, Relaxation, Stress, Medication, Environmental, Cardiac Alert, Respiratory Alert, Emergency, Cardiac Emergency
+- **Risk scoring**: Low → Moderate → High → Critical
+- **Live confidence + probability bars** in the dashboard
+- **Anomaly detection**: Binary normal vs. abnormal classification
 
-**Total: ~$189** for a complete multi-modal health sensing station.
+### Animated Room Visualization
 
-### Network Topology
+The dashboard includes a real-time SVG visualization showing:
+- WiFi nodes with pulsing signal waves
+- Animated signal paths between nodes
+- Person with breathing and heartbeat animations
+- Motion-specific animations (seizure, fall, tremor, walking)
+- Fresnel zone ellipses
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    SENSUS MESH                       │
-│                                                      │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
-│  │ ESP32-C6 │  │ ESP32-C6 │  │ ESP32-C6 │  CSI Mesh │
-│  │  node_1  │  │  node_2  │  │  node_3  │  (WiFi)   │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘           │
-│       │              │              │                 │
-│  ┌────┴──────┐ ┌────┴──────┐ ┌────┴──────┐           │
-│  │ ESP32-S3  │ │ ESP32-S3  │ │ ESP32-S3  │  Audio    │
-│  │ node_s3_1 │ │ node_s3_2 │ │ node_s3_3 │  Mesh     │
-│  └────┬──────┘ └────┬──────┘ └────┬──────┘           │
-│       │              │              │                 │
-│       └──────────────┼──────────────┘                 │
-│                      │ MQTT (192.168.0.59:1883)       │
-│              ┌───────┴────────┐                       │
-│              │  TP-Link AX1500 │  Dedicated CSI Net    │
-│              │  sensus-csi     │  (2.4GHz, Ch1, 20MHz) │
-│              └───────┬────────┘                       │
-│                      │ Ethernet                       │
-│              ┌───────┴────────┐                       │
-│              │ Raspberry Pi 5  │  Edge AI + Dashboard  │
-│              │    (16GB)       │  Port 5000             │
-│              └───────┬────────┘                       │
-│                      │ WiFi (phone hotspot)            │
-│                      ↓                                │
-│              Cloud APIs (Gemini, ElevenLabs,           │
-│              MongoDB Atlas, Snowflake, Auth0)          │
-└─────────────────────────────────────────────────────┘
-```
+## Hackathon Integrations
 
----
+### 🧬 Hypercerts — Impact Claims ($2.5K bounty)
+Generates structured impact claims from health monitoring sessions with CID-rooted evidence. Each session produces a verifiable hypercert documenting who was monitored, what was detected, and the sensor configuration used.
 
-## 📊 Signal Processing — RuView-Inspired Pipeline
+### 🔐 Data Sovereignty — Infrastructure & Digital Rights ($6K bounty)
+Personal health data vault with:
+- AES-256-GCM encryption at rest
+- Granular per-field consent (e.g., grant a clinician access to heart rate only)
+- FHIR-compatible portable data export
+- Immutable audit log of all data access
+- Time-bounded, revocable consent grants
 
-Our CSI processing pipeline is inspired by [RuView's](https://github.com/ruvnet/RuView) WiFi DensePose architecture:
+### 📦 Filecoin Storage ($2.5K bounty)
+Decentralized health data storage with:
+- Content-addressed (CID) health record packages
+- Storage deal structures for Filecoin calibration testnet
+- CAR file manifests for batch upload
+- Verifiable data integrity via SHA-256 hashing
 
-1. **Conjugate Multiplication** — Removes random phase offsets between consecutive CSI packets by computing `p_clean[t] = p[t] × conj(p[t-1])`. This isolates phase *changes* caused by chest motion from static environmental effects.
+### 🗄️ Storacha ($500 bounty)
+Persistent health data on Storacha network with:
+- UCAN delegation chains (Patient → Doctor → Specialist)
+- Re-delegation support for multi-provider workflows
+- Health knowledge base for AI agent RAG
+- Content-addressed retrieval with integrity verification
 
-2. **Hampel Filter** — Replaces outlier samples with local median values. More robust than moving average for handling WiFi interference spikes from other devices.
+### 🤖 Impulse AI — Autonomous ML ($500 bounty)
+Deep integration with the Impulse AI platform for autonomous health state classification:
+- **SDK Integration**: Connected via `impulse-api-sdk-python` with live API key authentication
+- **Training Pipeline**: 18,180-sample dataset generated from 30 clinical scenarios across 15 physiological features
+- **3 ML Tasks**: Multi-class health state classification (30→10 classes, 98.8% accuracy), binary anomaly detection, and time-series vital sign forecasting
+- **Real-Time Inference**: RandomForest ensemble classifier provides live health state prediction with confidence scoring and risk levels in the dashboard
+- **Impulse AI-Ready Export**: CSV datasets with compatible metadata, feature descriptions, and recommended training parameters for direct upload to Impulse platform
+- **Dashboard Panel**: Live Impulse AI status panel showing SDK connection, dataset stats, model metrics, and per-frame inference results
 
-3. **Top-K Subcarrier Selection** — Scores all 52 subcarriers by cardiac+breathing band energy ratio and selects the top 10 most body-motion-sensitive channels. Inspired by RuView's learned graph partitioning.
+## Tech Stack
 
-4. **PCA Dimensionality Reduction** — Extracts the principal component (dominant motion signature) from selected subcarriers via eigendecomposition.
+| Component | Technology |
+|-----------|-----------|
+| **CSI Sensing** | ESP32-C6 (XIAO) × 3, WiFi CSI at 2.4 GHz |
+| **Signal Processing** | NumPy, SciPy (FFT, bandpass, PCA, Hampel filter) |
+| **ML Classification** | scikit-learn + Impulse AI SDK (RandomForest, 98.8% acc, 30 scenarios) |
+| **Backend** | Raspberry Pi 5, MQTT (Mosquitto), Python |
+| **Dashboard** | Streamlit, Plotly, HTML5 Canvas, SVG animations |
+| **Networking** | TP-Link AX1500 (dual-band), MQTT over LAN |
+| **Environment** | DHT11, CCS811, MAX30102, GSR (via Arduino Giga R1) |
+| **Storage** | Filecoin, Storacha, MongoDB Atlas |
+| **Encryption** | AES-256-GCM, HMAC-SHA256 |
 
-5. **Bandpass + FFT Extraction** — Separates breathing (0.1–0.5 Hz) and cardiac (0.8–2.0 Hz) frequency bands, identifies dominant peak frequency.
-
-6. **Fresnel Zone Breathing Model** — Physics-based validation: at 2.4 GHz (λ=12.5cm), chest displacement of 1–5mm from breathing crosses Fresnel zone boundaries, creating predictable amplitude modulations.
-
-7. **Multi-Node SNR-Weighted Fusion** — Combines vital signs from 3+ mesh nodes using signal-to-noise ratio as weights. Higher-quality nodes contribute more to the final estimate.
-
----
-
-## 🤖 AI Integration
-
-### Google Gemini (Prize: Best Use of Gemini API)
-- Real-time clinical interpretation of fused vital signs
-- Context-aware: considers environmental data (CO₂, temperature, humidity) when interpreting elevated breathing or heart rates
-- Runs on `gemini-2.0-flash` for low-latency responses
-- Toggle-controlled from dashboard to manage rate limits
-
-### ElevenLabs (Prize: Best Use of ElevenLabs)
-- Multilingual voice alerts using `eleven_multilingual_v2` model
-- Speaks critical health alerts through Pi speaker
-- Supports 29+ languages for diverse healthcare teams
-- Only activates on warning/critical states to avoid alert fatigue
-
-### MongoDB Atlas (Prize: Best Use of MongoDB Atlas)
-- Stores all vital sign readings with timestamps
-- Session management for patient monitoring periods
-- Queryable history for trend analysis
-
-### Snowflake (Prize: Best Use of Snowflake API)
-- Analytics data warehouse for population health metrics
-- Streams vital signs every 30 seconds for longitudinal analysis
-- Enables cross-patient, cross-shift aggregate insights
-
-### Auth0 (Prize: Best Use of Auth0)
-- Secure clinician authentication for dashboard access
-- Role-based access control (nurse vs. supervisor vs. admin)
-- HIPAA-aligned session management
-
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
-- Raspberry Pi 5 with Raspberry Pi OS
-- 3× ESP32-C6 boards + WiFi router
-- Python 3.11+
+- Python 3.10+
+- pip
 
-### Pi Setup
+### Installation
+
 ```bash
-# Clone and bootstrap
-git clone https://github.com/YOUR_USERNAME/sensus.git
-cd sensus
-chmod +x pi/scripts/bootstrap.sh
-./pi/scripts/bootstrap.sh
-
-# Configure API keys
-cp pi/config/.env.template pi/config/.env
-nano pi/config/.env  # Add your Gemini, ElevenLabs keys
-
-# Start Sensus
-cd pi/services
-python main.py
+git clone https://github.com/jemsbhai/plgenesis-sensus.git
+cd plgenesis-sensus
+pip install -r demo/requirements.txt
+pip install scikit-learn
 ```
 
-### ESP32 Setup
-1. Open `esp32/c6/sensus_node_c6.ino` in Arduino IDE
-2. Board: **XIAO_ESP32C6** | USB CDC On Boot: **Enabled**
-3. Change `NODE_ID` per board (`node_1`, `node_2`, `node_3`)
-4. Flash each board
+### Run the Demo
 
-### Access Dashboard
-Open `http://<pi-ip>:5000` in your browser.
+```bash
+# Train the ML classifier (first time only, ~30 seconds)
+python demo/classifier.py
 
----
-
-## 📁 Project Structure
-
-```
-sensus/
-├── README.md
-├── docs/
-│   └── WIRING.md              # Pin-by-pin wiring guide
-├── esp32/
-│   ├── c6/
-│   │   └── sensus_node_c6.ino # CSI + BLE + sensors firmware
-│   └── s3/
-│       └── sensus_node_s3_audio.ino  # Audio capture firmware
-└── pi/
-    ├── config/
-    │   ├── .env               # API keys (gitignored)
-    │   └── .env.template      # Template
-    ├── scripts/
-    │   └── bootstrap.sh       # One-command Pi setup
-    └── services/
-        ├── main.py            # Fusion engine + MQTT handler
-        ├── csi_processor.py   # RuView-inspired CSI pipeline
-        ├── audio_processor.py # Audio event classification
-        ├── env_processor.py   # Environmental context
-        ├── health_engine.py   # Multi-modal health fusion
-        ├── api_integrations.py # Gemini, ElevenLabs, MongoDB, Snowflake, Auth0
-        └── dashboard.py       # Real-time web dashboard
+# Launch the dashboard
+streamlit run demo/app.py
 ```
 
+### Run Integration Tests
+
+```bash
+python integrations/hypercerts.py
+python integrations/data_sovereignty.py
+python integrations/filecoin_store.py
+python integrations/storacha_store.py
+python integrations/impulse_ml.py
+```
+
+## Project Structure
+
+```
+plgenesis-sensus/
+├── demo/
+│   ├── app.py              # Streamlit dashboard with animated SVG room
+│   ├── simulator.py         # 30-scenario physiological signal generator
+│   ├── classifier.py        # ML health state classifier (RandomForest)
+│   └── requirements.txt
+├── integrations/
+│   ├── hypercerts.py         # Impact claim generation
+│   ├── data_sovereignty.py   # Encrypted vault + consent + FHIR export
+│   ├── filecoin_store.py     # Decentralized storage on Filecoin
+│   ├── storacha_store.py     # Storacha storage + UCAN delegations
+│   └── impulse_ml.py         # ML dataset export for Impulse AI
+├── pi/
+│   └── services/
+│       ├── csi_processor.py  # RuView-inspired CSI signal processing
+│       ├── dashboard.py      # Original Flask dashboard (hardware mode)
+│       ├── main.py           # MQTT event handling + sensor fusion
+│       └── ...
+├── esp32/                    # ESP32-C6 firmware (CSI collection)
+├── arduino/                  # Arduino Giga R1 sensor firmware
+├── output/                   # Generated artifacts from integrations
+│   ├── hypercerts/           # Impact claim JSONs
+│   ├── data_sovereignty/     # Encrypted vault exports
+│   ├── filecoin/             # Storage packages + manifests
+│   ├── storacha/             # UCAN delegations + knowledge base
+│   ├── impulse_ai/           # Training datasets (CSV)
+│   └── model/                # Trained classifier (pickle)
+└── README.md
+```
+
+## Research References
+
+- **RuView** — WiFi-based multi-person pose estimation
+- **ESP32-CSI-Tool** — Open-source CSI extraction for ESP32
+- **ESPectre** — Spectral analysis of CSI for activity recognition
+- **MultiSense** — Multi-node CSI sensing framework
+- **SpaceBeat** — Contactless vital sign monitoring via WiFi
+
+## Clinical Relevance
+
+| Use Case | Impact |
+|----------|--------|
+| **Sleep Apnea Screening** | Affects ~1B people globally. Sensus detects breathing pauses without a sleep lab. |
+| **Opioid Overdose Prevention** | #1 cause of preventable hospital death. Contactless respiratory depression monitoring. |
+| **Elderly Fall Detection** | Leading cause of injury death in adults 65+. Immediate detection + alerting. |
+| **Post-Surgical Monitoring** | Continuous vitals without sensor fatigue or skin irritation. |
+| **Medication Compliance** | Track physiological response to beta blockers, sedatives, stimulants. |
+| **Mental Health** | Detect panic attacks, PTSD flashbacks, stress episodes contactlessly. |
+
+## Team
+
+Built for **PL_Genesis: Frontiers of Collaboration Hackathon 2026** by the Sensus team.
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
 ---
 
-## 🏆 Prize Targets
+<div align="center">
 
-| Prize | Integration |
-|-------|------------|
-| Best Use of Gemini API | Real-time health interpretation engine |
-| Best Use of ElevenLabs | Multilingual voice health alerts |
-| Best Use of Gen AI | Gemini-powered clinical insight generation |
-| Best Use of Reach Capital | Frontline healthcare worker monitoring |
-| Best Use of MongoDB Atlas | Patient vital signs data store |
-| Best Use of Snowflake API | Population health analytics warehouse |
-| Best Use of Auth0 | Secure clinician access control |
-| Best Use of DigitalOcean | Cloud deployment infrastructure |
+**Sensus: Because the best sensor is the one you don't have to wear.**
 
----
-
-## 📚 References
-
-- [DensePose From WiFi — CMU (arXiv:2301.00250)](https://arxiv.org/abs/2301.00250)
-- [RuView — WiFi DensePose Implementation](https://github.com/ruvnet/RuView)
-- [ESP32 CSI — Espressif](https://github.com/espressif/esp-csi)
-- [Fresnel Zone Model for Breathing Detection](https://ieeexplore.ieee.org/document/8067692)
-
----
-
-## 👥 Team
-
-Built at HackUSF 2026, University of South Florida, Tampa FL.
-
----
-
-## 📄 License
-
-MIT License — See [LICENSE](LICENSE) for details.
+</div>
+]]>

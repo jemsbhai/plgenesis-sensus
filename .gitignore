@@ -26,3 +26,9 @@ config/.env
 
 # Backups
 *.bak
+
+# Model binaries (too large for git)
+output/model/*.pkl
+
+# Generated datasets (regenerate with scripts)
+output/impulse_ai/*.csv

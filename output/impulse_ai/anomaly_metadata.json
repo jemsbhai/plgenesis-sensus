@@ -1,0 +1,17 @@
+{
+  "dataset_name": "Sensus Health Anomaly Detection",
+  "version": "1.0",
+  "created": "2026-03-31T22:49:57.891030+00:00",
+  "task": "binary classification / anomaly detection",
+  "target_column": "is_anomaly",
+  "total_samples": 18180,
+  "normal_samples": 13123,
+  "anomaly_samples": 5057,
+  "anomaly_ratio": 0.278,
+  "impulse_config": {
+    "problem_type": "classification",
+    "target": "is_anomaly",
+    "features": "auto",
+    "eval_metric": "f1"
+  }
+}

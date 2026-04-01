@@ -1,0 +1,142 @@
+{
+  "metadata": {
+    "name": "Sensus Health Monitoring: Cardiac Arrest",
+    "description": "Contactless health monitoring session using WiFi CSI sensing. Scenario: Cardiac Arrest (Cardiac Events). Duration: 480s with 3 sensor nodes. Vital signs extracted: HR, BR, HRV, SpO2, BP estimation. Alerts generated: 2.",
+    "image": "",
+    "external_url": "https://github.com/jemsbhai/plgenesis-sensus",
+    "work_scope": [
+      "contactless-health-monitoring",
+      "wifi-csi-sensing",
+      "vital-sign-extraction",
+      "scenario:cardiac-arrest"
+    ],
+    "work_timeframe_start": "2026-03-31T22:49:41.128690+00:00",
+    "work_timeframe_end": "2026-03-31T22:49:41.128690+00:00",
+    "impact_scope": [
+      "healthcare-accessibility",
+      "patient-monitoring",
+      "early-warning-detection",
+      "non-invasive-sensing"
+    ],
+    "impact_timeframe_start": "2026-03-31T22:49:41.128690+00:00",
+    "impact_timeframe_end": "2026-03-31T22:49:41.128690+00:00",
+    "contributors": [
+      "Sensus Health Platform"
+    ],
+    "rights": [
+      "Public"
+    ],
+    "properties": [
+      {
+        "trait_type": "Platform",
+        "value": "Sensus"
+      },
+      {
+        "trait_type": "Sensor Type",
+        "value": "WiFi CSI (2.4 GHz)"
+      },
+      {
+        "trait_type": "Hardware",
+        "value": "ESP32-C6 Mesh + Raspberry Pi 5"
+      },
+      {
+        "trait_type": "Scenario",
+        "value": "Cardiac Arrest"
+      },
+      {
+        "trait_type": "Category",
+        "value": "Cardiac Events"
+      },
+      {
+        "trait_type": "Duration (s)",
+        "value": 480.0
+      },
+      {
+        "trait_type": "Node Count",
+        "value": 3
+      },
+      {
+        "trait_type": "Alerts Generated",
+        "value": 2
+      },
+      {
+        "trait_type": "Mean Heart Rate",
+        "value": 14.8
+      },
+      {
+        "trait_type": "Mean Breathing Rate",
+        "value": 2.2
+      },
+      {
+        "trait_type": "Evidence CID",
+        "value": "bafkade1725e3ac003f42775e5dc3d79b4fe6c8e2e1f6253610190ca90c0"
+      },
+      {
+        "trait_type": "Data Hash (SHA-256)",
+        "value": "ade1725e3ac003f42775e5dc3d79b4fe6c8e2e1f6253610190ca90c088e205c4"
+      },
+      {
+        "trait_type": "Hackathon",
+        "value": "PL_Genesis 2026"
+      }
+    ]
+  },
+  "evidence": {
+    "session_id": "351786e43b67",
+    "timestamp_start": "2026-03-31T22:49:41.128690+00:00",
+    "timestamp_end": "2026-03-31T22:49:41.128690+00:00",
+    "duration_sec": 480.0,
+    "sensor_type": "wifi_csi",
+    "node_count": 3,
+    "node_ids": [
+      "node_1",
+      "node_2",
+      "node_3"
+    ],
+    "sample_rate_hz": 10,
+    "subcarrier_count": 52,
+    "vitals_summary": {
+      "hr_mean": 14.8,
+      "hr_min": 9.0,
+      "hr_max": 180.0,
+      "hr_std": 22.22,
+      "hr_samples": 481,
+      "br_mean": 2.2,
+      "br_min": 1.2,
+      "br_max": 25.0,
+      "br_std": 3.67,
+      "br_samples": 481,
+      "hrv_rmssd_mean": 3.8,
+      "hrv_rmssd_min": 1.9,
+      "hrv_rmssd_max": 38.0,
+      "hrv_rmssd_std": 7.49,
+      "hrv_rmssd_samples": 481,
+      "spo2_mean": 72.8,
+      "spo2_min": 71.4,
+      "spo2_max": 98.0,
+      "spo2_std": 5.51,
+      "spo2_samples": 481,
+      "presence_pct": 100.0,
+      "motion_pct": 5.2
+    },
+    "alerts": [
+      {
+        "level": "critical",
+        "message": "\u26a0 VENTRICULAR FIBRILLATION \u2014 CALL 911",
+        "timestamp": 17.0
+      },
+      {
+        "level": "critical",
+        "message": "\u26a0 CARDIAC ARREST \u2014 NO HEARTBEAT \u2014 CPR NEEDED \u2014 911 CALLED",
+        "timestamp": 34.0
+      }
+    ],
+    "scenarios_detected": [
+      "Cardiac Arrest"
+    ],
+    "data_hash": "ade1725e3ac003f42775e5dc3d79b4fe6c8e2e1f6253610190ca90c088e205c4",
+    "evidence_cid": "bafkade1725e3ac003f42775e5dc3d79b4fe6c8e2e1f6253610190ca90c0"
+  },
+  "session_id": "351786e43b67",
+  "evidence_cid": "bafkade1725e3ac003f42775e5dc3d79b4fe6c8e2e1f6253610190ca90c0"
+}

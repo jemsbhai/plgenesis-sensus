@@ -1,0 +1,51 @@
+{
+  "type": "sensus-health-knowledge-base",
+  "sessions": 3,
+  "entries": [
+    {
+      "cid": "bafkreig0e49267de8fcbd55e586467ebfc9e5188090749c0536f0f028a4",
+      "scenario": "Healthy Resting",
+      "summary": {
+        "hr_mean": 70.0,
+        "hr_range": [
+          70.0,
+          70.0
+        ],
+        "br_mean": 15.0,
+        "alert_count": 0
+      },
+      "alert_count": 0,
+      "sample_count": 601
+    },
+    {
+      "cid": "bafkreig2109d637f6e62d0fca10807fb824bd6157e4303ae625109d136d",
+      "scenario": "Acute Stress Response",
+      "summary": {
+        "hr_mean": 89.9,
+        "hr_range": [
+          72.0,
+          110.0
+        ],
+        "br_mean": 18.8,
+        "alert_count": 2
+      },
+      "alert_count": 2,
+      "sample_count": 751
+    },
+    {
+      "cid": "bafkreigbc95c59a37b08c1323a9e74b3a79429a31aa3c51a7d9b6c2593b",
+      "scenario": "Cardiac Arrest",
+      "summary": {
+        "hr_mean": 14.8,
+        "hr_range": [
+          9.0,
+          180.0
+        ],
+        "br_mean": 2.2,
+        "alert_count": 2
+      },
+      "alert_count": 2,
+      "sample_count": 481
+    }
+  ]
+}

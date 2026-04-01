@@ -1,0 +1,68 @@
+[
+  {
+    "timestamp": "2026-03-31T22:49:41.969880+00:00",
+    "action": "store",
+    "actor": "patient_alice_001",
+    "record_id": "de55baf175ece3d4",
+    "fields_accessed": [],
+    "consent_grant_id": "",
+    "ip_hash": "",
+    "details": "Stored session 'Acute Stress Response' with 751 samples"
+  },
+  {
+    "timestamp": "2026-03-31T22:49:41.969880+00:00",
+    "action": "grant_consent",
+    "actor": "patient_alice_001",
+    "record_id": "de55baf175ece3d4",
+    "fields_accessed": [
+      "heart_rate",
+      "breathing_rate",
+      "hrv_rmssd",
+      "stress_index"
+    ],
+    "consent_grant_id": "",
+    "ip_hash": "",
+    "details": "Granted access to dr_smith for Stress assessment review"
+  },
+  {
+    "timestamp": "2026-03-31T22:49:41.974068+00:00",
+    "action": "read",
+    "actor": "dr_smith",
+    "record_id": "de55baf175ece3d4",
+    "fields_accessed": [
+      "heart_rate",
+      "breathing_rate",
+      "hrv_rmssd",
+      "stress_index"
+    ],
+    "consent_grant_id": "7e7f82254dd740d1",
+    "ip_hash": "",
+    "details": "Read by dr_smith under consent 7e7f82254dd740d1"
+  },
+  {
+    "timestamp": "2026-03-31T22:49:41.978200+00:00",
+    "action": "export",
+    "actor": "patient_alice_001",
+    "record_id": "de55baf175ece3d4",
+    "fields_accessed": [
+      "heart_rate",
+      "breathing_rate",
+      "hrv_sdnn",
+      "hrv_rmssd",
+      "spo2",
+      "blood_pressure_sys",
+      "blood_pressure_dia",
+      "gsr",
+      "skin_temp",
+      "stress_index",
+      "activity",
+      "motion_level",
+      "presence_score",
+      "alert_level",
+      "environment"
+    ],
+    "consent_grant_id": "",
+    "ip_hash": "",
+    "details": "Portable FHIR export by owner"
+  }
+]

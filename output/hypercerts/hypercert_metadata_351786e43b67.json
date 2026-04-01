@@ -1,0 +1,82 @@
+{
+  "name": "Sensus Health Monitoring: Cardiac Arrest",
+  "description": "Contactless health monitoring session using WiFi CSI sensing. Scenario: Cardiac Arrest (Cardiac Events). Duration: 480s with 3 sensor nodes. Vital signs extracted: HR, BR, HRV, SpO2, BP estimation. Alerts generated: 2.",
+  "image": "",
+  "external_url": "https://github.com/jemsbhai/plgenesis-sensus",
+  "work_scope": [
+    "contactless-health-monitoring",
+    "wifi-csi-sensing",
+    "vital-sign-extraction",
+    "scenario:cardiac-arrest"
+  ],
+  "work_timeframe_start": "2026-03-31T22:49:41.128690+00:00",
+  "work_timeframe_end": "2026-03-31T22:49:41.128690+00:00",
+  "impact_scope": [
+    "healthcare-accessibility",
+    "patient-monitoring",
+    "early-warning-detection",
+    "non-invasive-sensing"
+  ],
+  "impact_timeframe_start": "2026-03-31T22:49:41.128690+00:00",
+  "impact_timeframe_end": "2026-03-31T22:49:41.128690+00:00",
+  "contributors": [
+    "Sensus Health Platform"
+  ],
+  "rights": [
+    "Public"
+  ],
+  "properties": [
+    {
+      "trait_type": "Platform",
+      "value": "Sensus"
+    },
+    {
+      "trait_type": "Sensor Type",
+      "value": "WiFi CSI (2.4 GHz)"
+    },
+    {
+      "trait_type": "Hardware",
+      "value": "ESP32-C6 Mesh + Raspberry Pi 5"
+    },
+    {
+      "trait_type": "Scenario",
+      "value": "Cardiac Arrest"
+    },
+    {
+      "trait_type": "Category",
+      "value": "Cardiac Events"
+    },
+    {
+      "trait_type": "Duration (s)",
+      "value": 480.0
+    },
+    {
+      "trait_type": "Node Count",
+      "value": 3
+    },
+    {
+      "trait_type": "Alerts Generated",
+      "value": 2
+    },
+    {
+      "trait_type": "Mean Heart Rate",
+      "value": 14.8
+    },
+    {
+      "trait_type": "Mean Breathing Rate",
+      "value": 2.2
+    },
+    {
+      "trait_type": "Evidence CID",
+      "value": "bafkade1725e3ac003f42775e5dc3d79b4fe6c8e2e1f6253610190ca90c0"
+    },
+    {
+      "trait_type": "Data Hash (SHA-256)",
+      "value": "ade1725e3ac003f42775e5dc3d79b4fe6c8e2e1f6253610190ca90c088e205c4"
+    },
+    {
+      "trait_type": "Hackathon",
+      "value": "PL_Genesis 2026"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "roots": [
+    "bafybeig1777c90f9773c62177759bc8b800d52fc5ef6596134f34cd3568"
+  ],
+  "packages": [
+    {
+      "package_id": "c58143e08f19aa89",
+      "cid": "bafybeig1777c90f9773c62177759bc8b800d52fc5ef6596134f34cd3568",
+      "scenario": "Sleep Apnea Episode",
+      "owner": "patient_bob",
+      "samples": 501,
+      "duration": 500.0,
+      "alerts": 220,
+      "created": "2026-03-31T22:49:42.327874+00:00"
+    }
+  ],
+  "total_size_bytes": 215132
+}
