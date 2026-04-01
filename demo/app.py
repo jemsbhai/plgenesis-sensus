@@ -35,6 +35,12 @@ except Exception:
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'integrations'))
 
 try:
+    from impulse_inference import impulse_classify_sync
+    _impulse_available = True
+except Exception:
+    _impulse_available = False
+
+try:
     from hypercerts import HypercertGenerator
     from filecoin_store import FilecoinHealthStore
     from storacha_store import StorachaHealthStore
@@ -102,6 +108,10 @@ if 'classifier' not in st.session_state:
     st.session_state.classifier = None
 if 'ml_prediction' not in st.session_state:
     st.session_state.ml_prediction = None
+if 'impulse_prediction' not in st.session_state:
+    st.session_state.impulse_prediction = None
+if 'impulse_last_call' not in st.session_state:
+    st.session_state.impulse_last_call = 0
 if 'session_states' not in st.session_state:
     st.session_state.session_states = []
 if 'engine' not in st.session_state:
@@ -254,11 +264,22 @@ if st.session_state.running and st.session_state.engine:
         top_amp = sorted(amp, reverse=True)[:10]
         st.session_state.waveform_history.append(float(np.mean(top_amp)))
 
-    # ML Prediction
+    # ML Prediction (local — every frame)
     if clf is not None and clf.is_trained:
         st.session_state.ml_prediction = clf.predict(state)
     else:
         st.session_state.ml_prediction = None
+
+    # Impulse AI Prediction (remote — every 10 seconds)
+    if _impulse_available and time.time() - st.session_state.impulse_last_call > 10:
+        try:
+            impulse_result = impulse_classify_sync(state)
+            if impulse_result and impulse_result.get('predicted_class'):
+                st.session_state.impulse_prediction = impulse_result
+            st.session_state.impulse_last_call = time.time()
+        except Exception:
+            pass
+
     st.session_state.session_states.append(state)
     if len(st.session_state.session_states) > 500:
         st.session_state.session_states = st.session_state.session_states[-500:]
@@ -327,23 +348,33 @@ def _build_ml_panel(prediction):
     )
 
 
-def _build_impulse_panel(ml_prediction):
+def _build_impulse_panel(ml_prediction, impulse_prediction=None):
     """Build the Impulse AI integration panel."""
     has_key = bool(os.environ.get('IMPULSE_API_KEY') or os.environ.get('IMPSDK_API_KEY'))
     conn_color = '#10b981' if has_key else '#4b5e80'
     conn_text = 'Connected' if has_key else 'No API Key'
     conn_dot = 'on' if has_key else 'off'
 
-    # Show prediction stats if available
+    # Show LIVE Impulse AI API prediction
     pred_html = ''
-    if ml_prediction and ml_prediction.get('predicted_class'):
-        pred = ml_prediction['predicted_class']
-        conf = int(ml_prediction.get('confidence', 0) * 100)
+    if impulse_prediction and impulse_prediction.get('predicted_class'):
+        pred = impulse_prediction['predicted_class']
+        conf = int(impulse_prediction.get('confidence', 0) * 100)
+        reasoning = impulse_prediction.get('raw_response', '')[:120]
+        # Clean markdown from reasoning
+        reasoning = reasoning.replace('```json', '').replace('```', '').strip()
+        pred_html = (
+            f'<div style="background:#f59e0b10;border:1px solid #f59e0b33;border-radius:6px;padding:8px 10px;margin:8px 0;">'
+            f'<div style="font-size:9px;color:#f59e0b;font-weight:700;text-transform:uppercase;letter-spacing:1px;">'
+            f'\U0001f310 Live API Inference</div>'
+            f'<div style="font-size:16px;font-weight:800;color:#fcd34d;margin:4px 0;">{pred}</div>'
+            f'<div style="font-size:10px;color:#4b5e80;">{conf}% confidence</div>'
+            f'</div>'
+        )
+    elif has_key:
         pred_html = (
             f'<div style="background:#111b2e;border-radius:6px;padding:6px 10px;margin:6px 0;">'
-            f'<div style="font-size:10px;color:#4b5e80;">Live Inference</div>'
-            f'<div style="font-size:14px;font-weight:700;color:#f0f4fc;">{pred}</div>'
-            f'<div style="font-size:10px;color:#4b5e80;">{conf}% confidence</div>'
+            f'<div style="font-size:10px;color:#4b5e80;">\U0001f310 Waiting for API response...</div>'
             f'</div>'
         )
 
@@ -382,7 +413,7 @@ def _build_impulse_panel(ml_prediction):
     )
 
 
-def build_dashboard_html(state, hr_hist, br_hist, hrv_hist, wf_hist, ml_prediction=None):
+def build_dashboard_html(state, hr_hist, br_hist, hrv_hist, wf_hist, ml_prediction=None, impulse_prediction=None):
     """Build the entire dashboard as a single HTML component."""
 
     if state is None:
@@ -1017,7 +1048,7 @@ body {{ font-family:'Inter',system-ui,sans-serif; background:#06090f; color:#f0f
     {_build_ml_panel(ml_prediction)}
 
     <!-- IMPULSE AI -->
-    {_build_impulse_panel(ml_prediction)}
+    {_build_impulse_panel(ml_prediction, impulse_prediction)}
 </div>
 </div>
 
@@ -1272,6 +1303,7 @@ html = build_dashboard_html(
     st.session_state.hrv_history,
     st.session_state.waveform_history,
     st.session_state.ml_prediction,
+    st.session_state.impulse_prediction,
 )
 
 components.html(html, height=1200, scrolling=True)
