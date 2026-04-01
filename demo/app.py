@@ -243,6 +243,30 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
+    # Impulse AI Query Button
+    if _impulse_available:
+        st.markdown("---")
+        st.markdown("##### ⚡ Impulse AI Inference")
+        if st.button("🔮 Query Impulse AI", use_container_width=True, type="primary",
+                     disabled=not st.session_state.running):
+            if st.session_state.last_state:
+                with st.spinner("Querying Impulse AI..."):
+                    result = impulse_classify_sync(st.session_state.last_state)
+                    if result and result.get('predicted_class'):
+                        st.session_state.impulse_prediction = result
+                        st.success(f"Impulse AI: {result['predicted_class']} ({int(result.get('confidence',0)*100)}%)")
+                    else:
+                        st.warning("No response from Impulse AI")
+        if st.session_state.impulse_prediction:
+            ip = st.session_state.impulse_prediction
+            st.markdown(f"""
+            <div style="background:#f59e0b10;border:1px solid #f59e0b33;border-radius:8px;padding:10px;margin-top:8px;">
+                <div style="font-size:9px;color:#f59e0b;font-weight:700;text-transform:uppercase;">Last Impulse AI Result</div>
+                <div style="font-size:18px;font-weight:800;color:#fcd34d;margin:4px 0;">{ip.get('predicted_class','--')}</div>
+                <div style="font-size:11px;color:#4b5e80;">Confidence: {int(ip.get('confidence',0)*100)}%</div>
+            </div>
+            """, unsafe_allow_html=True)
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SIMULATION STEP
@@ -270,15 +294,7 @@ if st.session_state.running and st.session_state.engine:
     else:
         st.session_state.ml_prediction = None
 
-    # Impulse AI Prediction (remote — every 10 seconds)
-    if _impulse_available and time.time() - st.session_state.impulse_last_call > 10:
-        try:
-            impulse_result = impulse_classify_sync(state)
-            if impulse_result and impulse_result.get('predicted_class'):
-                st.session_state.impulse_prediction = impulse_result
-            st.session_state.impulse_last_call = time.time()
-        except Exception:
-            pass
+    # Impulse AI Prediction — triggered by button only (see sidebar)
 
     st.session_state.session_states.append(state)
     if len(st.session_state.session_states) > 500:
