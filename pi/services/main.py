@@ -409,7 +409,7 @@ class FusionLoop:
 def main():
     logger.info('╔══════════════════════════════════════════╗')
     logger.info('║  SENSUS — Contactless Health Sensing     ║')
-    logger.info('║  HackUSF 2026                            ║')
+    logger.info('║  PL_Genesis 2026                         ║')
     logger.info('║  WiFi CSI + BLE + Audio + Environmental  ║')
     logger.info('║  + RFID/Fingerprint Auth + NeoPixel LEDs ║')
     logger.info('╚══════════════════════════════════════════╝')

@@ -1,6 +1,6 @@
 """
 Sensus API Integrations
-Sponsor-specific integrations for HackUSF 2026 prizes.
+Sponsor-specific integrations for PL_Genesis 2026 prizes.
 """
 
 import os

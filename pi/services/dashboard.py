@@ -1,5 +1,5 @@
 """
-Sensus Web Dashboard — HackUSF 2026
+Sensus Web Dashboard — PL_Genesis 2026
 ====================================
 Real-time contactless health monitoring dashboard.
 Features: CSI waveform viz, vital signs, AI interpretation, node status.
@@ -294,7 +294,7 @@ body { font-family:'Inter',system-ui,-apple-system,sans-serif; background:var(--
 
 <!-- FOOTER -->
 <div class="footer">
-  SENSUS v1.0 &mdash; HackUSF 2026 &mdash; WiFi CSI + BLE + Environmental + Audio Fusion
+  SENSUS v1.0 &mdash; PL_Genesis 2026 &mdash; WiFi CSI + BLE + Environmental + Audio Fusion
   &mdash; Powered by <a href="#">ESP32-C6/S3 Mesh</a> + Raspberry Pi 5
 </div>
 

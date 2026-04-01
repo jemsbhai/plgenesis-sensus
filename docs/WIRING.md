@@ -59,7 +59,7 @@ Just power via USB-C.
 ## Raspberry Pi 5
 
 - Power: Official 27W USB-C PSU
-- Network: WiFi to TP-Link AX1500 (hackusf-csi)
+- Network: WiFi to TP-Link AX1500 (sensus-csi)
 - USB: Mini USB mic plugged into USB-A port
 - Display: Mini HDMI screen via HDMI-D to HDMI-A cable
 - Input: Rii K01XI USB dongle
@@ -67,7 +67,7 @@ Just power via USB-C.
 ## TP-Link AX1500 Router
 
 - NOT connected to internet
-- SSID: hackusf-csi
+- SSID: sensus-csi
 - Password: sensus2026
 - Channel: 1 (fixed)
 - Band: 2.4 GHz only
